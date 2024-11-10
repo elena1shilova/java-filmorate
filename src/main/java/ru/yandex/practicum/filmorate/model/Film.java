@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Setter
 @Getter
@@ -20,4 +21,5 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private Long duration;
+    private Set<Long> idLike;
 }
