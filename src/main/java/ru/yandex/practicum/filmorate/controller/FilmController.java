@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -44,18 +45,18 @@ public class FilmController {
         filmService.delete(id);
     }
 
-    @GetMapping("/popular?count={count}")
-    public List<Film> getFilmPopular(@PathVariable Integer count) {
+    @GetMapping("/popular")
+    public List<Film> getFilmPopular(@RequestParam Integer count) {
         return filmService.getFilmPopular(count);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public void deleteLike(@PathVariable Integer id, @PathVariable Integer userId) {
+    public void deleteLike(@PathVariable Long id, @PathVariable Long userId) {
         filmService.deleteLike(id, userId);
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Film updateLike(@PathVariable Integer id, @PathVariable Long userId) {
+    public Film updateLike(@PathVariable Long id, @PathVariable Long userId) {
         return filmService.updateLike(id, userId);
     }
 }
