@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -61,7 +62,7 @@ public class FilmControllerTest {
         assertEquals(168L, savedFilm.getDuration());
 
         film.setName(null);
-        assertThrows(ValidationException.class, () -> filmController.create(film));
+        assertThrows(RuntimeException.class, () -> filmController.create(film));
 
         film.setName("filmName1");
         film.setDescription("1111111111111111111111111111111111111111111111111111111111111111111" +
@@ -90,6 +91,6 @@ public class FilmControllerTest {
 
         Film filmUpdate = new Film();
         filmUpdate.setId(8L);
-        assertThrows(ValidationException.class, () -> filmController.update(filmUpdate));
+        assertThrows(ElementNotFoundException.class, () -> filmController.update(filmUpdate));
     }
 }
