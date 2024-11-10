@@ -52,28 +52,12 @@ public class FilmController {
         if (newFilm.getId() == null) {
             throw new ValidationException("Id должен быть указан");
         }
-
-        validFilm(newFilm);
-
-        if (films.containsKey(newFilm.getId())) {
-            Film oldFilm = films.get(newFilm.getId());
-
-            if (newFilm.getName() != null && !newFilm.getName().isEmpty()) {
-                oldFilm.setName(newFilm.getName());
-            }
-            if (newFilm.getDescription() != null) {
-                oldFilm.setDescription(newFilm.getDescription());
-            }
-            if (newFilm.getReleaseDate() != null) {
-                oldFilm.setReleaseDate(newFilm.getReleaseDate());
-            }
-            if (newFilm.getDuration() != null) {
-                oldFilm.setDuration(newFilm.getDuration());
-            }
-            log.debug("Фильм успешно обновлен");
-            return oldFilm;
+        if (!films.containsKey(newFilm.getId())) {
+            throw new ValidationException("id = " + newFilm.getId() + " не найден");
         }
-        throw new ValidationException("id = " + newFilm.getId() + " не найден");
+        validFilm(newFilm);
+        films.put(newFilm.getId(), newFilm);
+        return newFilm;
     }
 
     private void validFilm(Film film) {
