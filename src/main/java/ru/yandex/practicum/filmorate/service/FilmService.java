@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -14,8 +13,6 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @Service
 public class FilmService {
@@ -42,15 +39,10 @@ public class FilmService {
     }
 
     public List<Film> getFilmPopular(Integer count) {
+
         List<Film> films = filmStorage.findAll();
         films.sort(Collections.reverseOrder(Comparator.comparingLong(film -> film.getIdLike().size())));
-
-
-        if (count == null) {
-            return films.stream().limit(10).toList();
-        } else {
-            return films.stream().limit(count > films.size() ? films.size() : count).toList();
-        }
+        return films.stream().limit(count > films.size() ? films.size() : count).toList();
     }
 
     public void deleteLike(Long id, Long userId) {
@@ -58,34 +50,18 @@ public class FilmService {
         if (id == null || userId == null) {
             throw new RuntimeException("Id фильма/лайка должен быть указан");
         }
-        List<Film> films = filmStorage.findAll();
-        List<User> userList = userStorage.findAll();
-        Optional<Film> filmDelete = films.stream().filter(a -> Objects.equals(a.getId(), id)).findFirst();
-        Optional<User> user = userList.stream().filter(a -> Objects.equals(a.getId(), userId)).findFirst();
-        if (filmDelete.isEmpty()) {
-            throw new ElementNotFoundException("id = " + id + " не найден");
-        }
-        if (user.isEmpty()) {
-            throw new ElementNotFoundException("id = " + userId + " не найден");
-        }
-        filmDelete.get().getIdLike().remove(userId);
+        Film filmDelete = filmStorage.findById(id);
+        User user = userStorage.findById(userId);
+        filmDelete.getIdLike().remove(user.getId());
     }
 
     public Film updateLike(Long id, Long userId) {
         if (id == null || userId == null) {
             throw new RuntimeException("Id фильма/лайка должен быть указан");
         }
-        List<Film> films = filmStorage.findAll();
-        List<User> userList = userStorage.findAll();
-        Optional<Film> filmUpdate = films.stream().filter(a -> Objects.equals(a.getId(), id)).findFirst();
-        Optional<User> user = userList.stream().filter(a -> Objects.equals(a.getId(), userId)).findFirst();
-        if (filmUpdate.isEmpty()) {
-            throw new ElementNotFoundException("id = " + id + " не найден");
-        }
-        if (user.isEmpty()) {
-            throw new ElementNotFoundException("id = " + userId + " не найден");
-        }
-        filmUpdate.get().getIdLike().add(userId);
-        return filmUpdate.get();
+        Film filmUpdate = filmStorage.findById(id);
+        User user = userStorage.findById(userId);
+        filmUpdate.getIdLike().add(user.getId());
+        return filmUpdate;
     }
 }

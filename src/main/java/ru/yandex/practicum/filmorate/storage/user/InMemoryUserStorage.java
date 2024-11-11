@@ -28,6 +28,16 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
+    public User findById(Long id) {
+
+        User user = users.get(id);
+        if (user == null) {
+            throw new ElementNotFoundException("id = " + userId + " не найден");
+        }
+        return user;
+    }
+
+    @Override
     public User create(User user) {
         if (user.getEmail() == null) {
             throw new RuntimeException("Имейл должен быть указан");

@@ -4,14 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,13 +39,10 @@ public class UserService {
         if (id == null) {
             throw new RuntimeException("Id пользователя должен быть указан");
         }
+        User user = userStorage.findById(id);
         List<User> userList = findAll();
-        Optional<User> user = userList.stream().filter(a -> Objects.equals(a.getId(), id)).findFirst();
 
-        if (user.isEmpty()) {
-            throw new ElementNotFoundException("Id пользователя не найден");
-        }
-        return userList.stream().filter(a -> user.get().getIdFriends().contains(a.getId())).toList();
+        return userList.stream().filter(a -> user.getIdFriends().contains(a.getId())).toList();
     }
 
     public List<User> updateFriends(Long id, Long otherId) {
@@ -57,15 +51,11 @@ public class UserService {
             throw new RuntimeException("Id пользователя/друга должен быть указан");
         }
 
-        List<User> userList = findAll();
-        Optional<User> user = userList.stream().filter(a -> Objects.equals(a.getId(), id)).findFirst();
-        Optional<User> userFriends = userList.stream().filter(a -> Objects.equals(a.getId(), otherId)).findFirst();
-        if (user.isEmpty() || userFriends.isEmpty()) {
-            throw new ElementNotFoundException("Id пользователя/друга не найден");
-        }
-        user.get().getIdFriends().add(otherId);
-        userFriends.get().getIdFriends().add(id);
-        return Arrays.asList(user.get(), userFriends.get());
+        User user = userStorage.findById(id);
+        User userFriends = userStorage.findById(otherId);
+        user.getIdFriends().add(userFriends.getId());
+        userFriends.getIdFriends().add(user.getId());
+        return Arrays.asList(user, userFriends);
     }
 
     public void deleteFriends(Long id, Long otherId) {
@@ -74,34 +64,21 @@ public class UserService {
             throw new RuntimeException("Id пользователя/друга должен быть указан");
         }
 
-        List<User> userList = findAll();
-        Optional<User> user = userList.stream().filter(a -> Objects.equals(a.getId(), id)).findFirst();
-        Optional<User> userFriends = userList.stream().filter(a -> Objects.equals(a.getId(), otherId)).findFirst();
-        if (user.isEmpty()) {
-            throw new ElementNotFoundException("Id пользователя не найден");
-        }
-        if (userFriends.isPresent()) {
-            user.get().getIdFriends().remove(userFriends.get().getId());
-            userFriends.get().getIdFriends().remove(id);
-        } else {
-            throw new ElementNotFoundException("Id друга не найден");
-        }
-
+        User user = userStorage.findById(id);
+        User userFriends = userStorage.findById(otherId);
+        user.getIdFriends().remove(userFriends.getId());
+        userFriends.getIdFriends().remove(user.getId());
     }
 
     public List<User> getUserFriendsCommon(Long id, Long otherId) {
         if (id == null || otherId == null) {
             throw new RuntimeException("Id пользователя/другого пользователя должен быть указан");
         }
+        User user = userStorage.findById(id);
+        User userFriends = userStorage.findById(otherId);
         List<User> userList = findAll();
-        Optional<User> user = userList.stream().filter(a -> Objects.equals(a.getId(), id)).findFirst();//.get().getIdFriends();
-        Optional<User> userOther = userList.stream().filter(a -> Objects.equals(a.getId(), otherId)).findFirst();//.get().getIdFriends();
 
-        if (user.isEmpty() || userOther.isEmpty()) {
-            throw new ElementNotFoundException("Id пользователя/друга не найден");
-        }
-
-        Set<Long> userConcurrence = user.get().getIdFriends().stream().filter(userOther.get().getIdFriends()::contains).collect(Collectors.toSet());
+        Set<Long> userConcurrence = user.getIdFriends().stream().filter(userFriends.getIdFriends()::contains).collect(Collectors.toSet());
         return userList.stream().filter(a -> userConcurrence.contains(a.getId())).toList();
     }
 }
