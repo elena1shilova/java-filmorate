@@ -40,8 +40,8 @@ public class FilmService {
     public List<Film> getFilmPopular(Integer count) {
 
         return filmStorage.findAll().stream()
-                .sorted(Collections.reverseOrder(Comparator.comparingLong(film -> film.getIdLike().size()))).
-                limit(count).toList();
+                .sorted(Collections.reverseOrder(Comparator.comparingLong(film -> film.getIdLike().size())))
+                .limit(count).toList();
     }
 
     public void deleteLike(Long id, Long userId) {
