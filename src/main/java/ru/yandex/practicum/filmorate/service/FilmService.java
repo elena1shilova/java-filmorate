@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,12 +15,11 @@ import java.util.Comparator;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class FilmService {
 
-    @Autowired
-    private FilmStorage filmStorage;
-    @Autowired
-    private UserStorage userStorage;
+    private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
 
     public List<Film> findAll() {
         return filmStorage.findAll();
@@ -40,9 +39,9 @@ public class FilmService {
 
     public List<Film> getFilmPopular(Integer count) {
 
-        List<Film> films = filmStorage.findAll();
-        films.sort(Collections.reverseOrder(Comparator.comparingLong(film -> film.getIdLike().size())));
-        return films.stream().limit(count > films.size() ? films.size() : count).toList();
+        return filmStorage.findAll().stream()
+                .sorted(Collections.reverseOrder(Comparator.comparingLong(film -> film.getIdLike().size()))).
+                limit(count).toList();
     }
 
     public void deleteLike(Long id, Long userId) {

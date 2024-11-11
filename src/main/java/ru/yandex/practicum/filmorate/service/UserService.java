@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -9,14 +9,12 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    private UserStorage userStorage;
+    private final UserStorage userStorage;
 
     public List<User> findAll() {
         return userStorage.findAll();
@@ -39,10 +37,10 @@ public class UserService {
         if (id == null) {
             throw new RuntimeException("Id пользователя должен быть указан");
         }
-        User user = userStorage.findById(id);
-        List<User> userList = findAll();
 
-        return userList.stream().filter(a -> user.getIdFriends().contains(a.getId())).toList();
+        return userStorage.findById(id).getIdFriends().stream()
+                .map(userStorage::findById)
+                .toList();
     }
 
     public List<User> updateFriends(Long id, Long otherId) {
@@ -74,11 +72,9 @@ public class UserService {
         if (id == null || otherId == null) {
             throw new RuntimeException("Id пользователя/другого пользователя должен быть указан");
         }
-        User user = userStorage.findById(id);
-        User userFriends = userStorage.findById(otherId);
-        List<User> userList = findAll();
-
-        Set<Long> userConcurrence = user.getIdFriends().stream().filter(userFriends.getIdFriends()::contains).collect(Collectors.toSet());
-        return userList.stream().filter(a -> userConcurrence.contains(a.getId())).toList();
+        return userStorage.findById(id).getIdFriends().stream()
+                .filter(userStorage.findById(otherId).getIdFriends()::contains)
+                .map(userStorage::findById)
+                .toList();
     }
 }
