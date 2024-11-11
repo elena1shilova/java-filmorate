@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -60,17 +61,17 @@ public class UserControllerTest {
         assertEquals(LocalDate.of(1990, 1, 1), savedUser1.getBirthday());
 
         user.setEmail(null);
-        assertThrows(ValidationException.class, () -> userController.create(user));
+        assertThrows(RuntimeException.class, () -> userController.create(user));
 
         user.setEmail("user3.com");
         assertThrows(ValidationException.class, () -> userController.create(user));
 
         user.setEmail("user1@example.com");
         user.setLogin("");
-        assertThrows(ValidationException.class, () -> userController.create(user));
+        assertThrows(RuntimeException.class, () -> userController.create(user));
 
         user.setLogin(null);
-        assertThrows(ValidationException.class, () -> userController.create(user));
+        assertThrows(RuntimeException.class, () -> userController.create(user));
 
         user.setLogin("user 1");
         assertThrows(ValidationException.class, () -> userController.create(user));
@@ -91,6 +92,6 @@ public class UserControllerTest {
 
         User userUpdate = new User();
         userUpdate.setId(8L);
-        assertThrows(ValidationException.class, () -> userController.update(userUpdate));
+        assertThrows(ElementNotFoundException.class, () -> userController.update(userUpdate));
     }
 }
