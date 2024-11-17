@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Setter
@@ -23,4 +24,6 @@ public class Film {
     private LocalDate releaseDate;
     private Long duration;
     private Set<Long> idLike = new HashSet<>();
+    private List<String> genre;
+    private MotionPictureAssociation mpa;
 }
