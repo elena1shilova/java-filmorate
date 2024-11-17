@@ -10,6 +10,7 @@ enum MotionPictureAssociation {
 
 
     private String title;
+
     MotionPictureAssociation(String title) {
         this.title = title;
     }
