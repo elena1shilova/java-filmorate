@@ -25,5 +25,5 @@ public class Film {
     private Long duration;
     private Set<Long> idLike = new HashSet<>();
     private List<String> genre;
-    private MotionPictureAssociation mpa;
+    private String mpa;
 }

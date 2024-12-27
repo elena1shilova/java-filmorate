@@ -100,6 +100,16 @@ public class InMemoryUserStorage implements UserStorage {
         users.remove(id);
     }
 
+    @Override
+    public List<Long> updateFriends(Long idUser, Long idFriend) {
+        return null;
+    }
+
+    @Override
+    public void deleteFriends(Long idUser, Long idFriend) {
+
+    }
+
     private void validFilm(User user) {
         if (user.getEmail() != null && !user.getEmail().contains("@")) {
             throw new ValidationException("Имейл должен содержать @");

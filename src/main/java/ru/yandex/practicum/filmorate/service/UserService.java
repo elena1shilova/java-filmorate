@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -51,8 +52,12 @@ public class UserService {
 
         User user = userStorage.findById(id);
         User userFriends = userStorage.findById(otherId);
-        user.getIdFriends().add(userFriends.getId());
-        userFriends.getIdFriends().add(user.getId());
+
+        if (user == null || userFriends == null) {
+            throw new ElementNotFoundException("Id пользователя/друга не найдено");
+        }
+
+        user.getIdFriends().addAll(userStorage.updateFriends(id, otherId));
         return Arrays.asList(user, userFriends);
     }
 
@@ -64,8 +69,10 @@ public class UserService {
 
         User user = userStorage.findById(id);
         User userFriends = userStorage.findById(otherId);
-        user.getIdFriends().remove(userFriends.getId());
-        userFriends.getIdFriends().remove(user.getId());
+        if (user == null || userFriends == null) {
+            throw new ElementNotFoundException("Id пользователя/друга не найдено");
+        }
+        deleteFriends(id, otherId);
     }
 
     public List<User> getUserFriendsCommon(Long id, Long otherId) {

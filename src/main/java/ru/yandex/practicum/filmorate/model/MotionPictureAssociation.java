@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
-enum MotionPictureAssociation {
+public enum MotionPictureAssociation {
 
     G("у фильма нет возрастных ограничений"),
     PG(" детям рекомендуется смотреть фильм с родителями"),
@@ -13,5 +13,9 @@ enum MotionPictureAssociation {
 
     MotionPictureAssociation(String title) {
         this.title = title;
+    }
+
+    public String getTitle() {
+        return title;
     }
 }

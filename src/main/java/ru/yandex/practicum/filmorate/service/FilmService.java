@@ -2,9 +2,11 @@ package ru.yandex.practicum.filmorate.service;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -18,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FilmService {
 
+    @Qualifier(value = "filmDbStorage")
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
 
@@ -33,7 +36,7 @@ public class FilmService {
         return filmStorage.update(newFilm);
     }
 
-    public void delete(@Valid @RequestParam Integer id) {
+    public void delete(@Valid @RequestParam Long id) {
         filmStorage.delete(id);
     }
 
@@ -51,7 +54,10 @@ public class FilmService {
         }
         Film filmDelete = filmStorage.findById(id);
         User user = userStorage.findById(userId);
-        filmDelete.getIdLike().remove(user.getId());
+        if (filmDelete == null || user == null) {
+            throw new ElementNotFoundException("Фильм/пользователь не найден");
+        }
+        filmStorage.deleteLike(id, userId);
     }
 
     public Film updateLike(Long id, Long userId) {
@@ -60,7 +66,11 @@ public class FilmService {
         }
         Film filmUpdate = filmStorage.findById(id);
         User user = userStorage.findById(userId);
-        filmUpdate.getIdLike().add(user.getId());
+
+        if (filmUpdate == null || user == null) {
+            throw new ElementNotFoundException("Фильм/пользователь не найден");
+        }
+        filmUpdate.getIdLike().addAll(filmStorage.addLike(id, userId));
         return filmUpdate;
     }
 }

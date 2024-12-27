@@ -65,7 +65,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(Long id) {
 
         if (id == null) {
             throw new RuntimeException("Id должен быть указан");
@@ -74,6 +74,16 @@ public class InMemoryFilmStorage implements FilmStorage {
             throw new ElementNotFoundException("id = " + id + " не найден");
         }
         films.remove(id);
+    }
+
+    @Override
+    public List<Long> addLike(Long idFilm, Long userId) {
+        return null;
+    }
+
+    @Override
+    public void deleteLike(Long idFilm, Long userId) {
+
     }
 
     private void validFilm(Film film) {

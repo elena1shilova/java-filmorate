@@ -21,5 +21,4 @@ public class User {
     private String name;
     private LocalDate birthday;
     private Set<Long> idFriends = new HashSet<>();
-    private Boolean friendship;
 }
