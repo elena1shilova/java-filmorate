@@ -86,8 +86,7 @@ public class FilmDbStorage implements FilmStorage {
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
 
-            film.getGenres().forEach(g ->
-                    {
+            film.getGenres().forEach(g -> {
                         try {
                             jdbcTemplate.update(
                                     "INSERT INTO genre (film_id, genre_id) VALUES (?, ?)",
