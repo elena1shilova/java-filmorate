@@ -30,6 +30,11 @@ public class FilmController {
         return filmService.findAll();
     }
 
+    @GetMapping("/{id}")
+    public Film getById(@PathVariable Long id) {
+        return filmService.getById(id);
+    }
+
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         return filmService.create(film);
@@ -58,15 +63,5 @@ public class FilmController {
     @PutMapping("/{id}/like/{userId}")
     public Film updateLike(@PathVariable Long id, @PathVariable Long userId) {
         return filmService.updateLike(id, userId);
-    }
-
-    @GetMapping("/genres")
-    public List<Film> getFilmGenres() {
-        return filmService.getFilmPopular(count);
-    }
-
-    @GetMapping("/genres/{id}")
-    public List<Film> getFilmGenresId(@RequestParam(defaultValue = "10") Integer count) {
-        return filmService.getFilmPopular(count);
     }
 }

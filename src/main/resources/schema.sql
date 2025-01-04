@@ -6,17 +6,29 @@ CREATE TABLE IF NOT EXISTS film (
     duration INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS genre_info (
+      id INTEGER PRIMARY KEY,
+      genre VARCHAR
+);
+
 CREATE TABLE IF NOT EXISTS genre (
     film_id BIGINT,
-    genre VARCHAR,
-    CONSTRAINT genre_fk FOREIGN KEY (film_id) REFERENCES film (id) ON DELETE CASCADE
+    genre_id INTEGER,
+    CONSTRAINT genre_fk FOREIGN KEY (film_id) REFERENCES film (id) ON DELETE CASCADE,
+    CONSTRAINT genre_fk2 FOREIGN KEY (genre_id) REFERENCES genre_info (id)
+);
+
+CREATE TABLE IF NOT EXISTS mpa_info (
+   id INTEGER PRIMARY KEY,
+   rating VARCHAR,
+   description VARCHAR
 );
 
 CREATE TABLE IF NOT EXISTS mpa (
      film_id BIGINT,
-     rating VARCHAR,
-     description VARCHAR,
-     CONSTRAINT mpa_fk FOREIGN KEY (film_id) REFERENCES film (id) ON DELETE CASCADE
+     mpa_id VARCHAR,
+     CONSTRAINT mpa_fk FOREIGN KEY (film_id) REFERENCES film (id) ON DELETE CASCADE,
+    CONSTRAINT mpa_fk2 FOREIGN KEY (mpa_id) REFERENCES mpa_info (id)
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -38,6 +50,36 @@ CREATE TABLE IF NOT EXISTS friends (
     user_id BIGINT,
     friend_id BIGINT,
     friendship BOOL,
-    CONSTRAINT friends_fk FOREIGN KEY (film_id) REFERENCES film (id) ON DELETE CASCADE,
+    CONSTRAINT friends_fk FOREIGN KEY (friend_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT friends_fk2 FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
+
+INSERT INTO genre_info (id, genre)
+SELECT *
+FROM (
+         SELECT 1 AS id, 'Комедия' AS genre UNION ALL
+         SELECT 2, 'Драма' UNION ALL
+         SELECT 3, 'Мультфильм' UNION ALL
+         SELECT 4, 'Триллер' UNION ALL
+         SELECT 5, 'Документальный' UNION ALL
+         SELECT 6, 'Боевик'
+     ) AS new_data
+WHERE NOT EXISTS (
+        SELECT 1
+        FROM genre_info g
+    );
+
+
+
+INSERT INTO mpa_info (id, rating, description)
+SELECT * FROM (
+                  SELECT 1 AS id, 'G' AS rating, 'у фильма нет возрастных ограничений' AS description UNION ALL
+                  SELECT 2, 'PG', 'детям рекомендуется смотреть фильм с родителями' UNION ALL
+                  SELECT 3, 'PG-13', 'детям до 13 лет просмотр не желателен' UNION ALL
+                  SELECT 4, 'R', 'лицам до 17 лет просматривать фильм можно только в присутствии взрослого' UNION ALL
+                  SELECT 5, 'NC-17', 'лицам до 18 лет просмотр запрещён'
+              ) AS new_data
+WHERE NOT EXISTS (
+        SELECT 1
+        FROM mpa_info m
+    );

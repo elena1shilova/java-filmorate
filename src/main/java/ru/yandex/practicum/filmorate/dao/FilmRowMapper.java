@@ -12,9 +12,9 @@ public class FilmRowMapper implements RowMapper<Film> {
         Film film = new Film();
         film.setId(resultSet.getLong("id"));
         film.setName(resultSet.getString("name"));
-        film.setDescription("description");
+        film.setDescription(resultSet.getString("description"));
         film.setReleaseDate(resultSet.getDate("releasedate").toLocalDate());
-        film.setDuration(resultSet.getLong("duration"));
+        film.setDuration(resultSet.getInt("duration"));
         return film;
     }
 }

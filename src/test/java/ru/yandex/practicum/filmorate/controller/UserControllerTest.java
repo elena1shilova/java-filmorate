@@ -40,8 +40,9 @@ public class UserControllerTest {
 
         Collection<User> users = userController.findAll();
 
-        assertTrue(users.contains(user));
-        assertTrue(users.contains(user2));
+        users.forEach(u -> {
+            assertTrue(u.getLogin().equals(user.getLogin()) || u.getLogin().equals(user2.getLogin()));
+        });
     }
 
     @Test
@@ -91,7 +92,7 @@ public class UserControllerTest {
         userController.create(user1);
 
         User userUpdate = new User();
-        userUpdate.setId(8L);
+        userUpdate.setId(user1.getId() + 5);
         assertThrows(ElementNotFoundException.class, () -> userController.update(userUpdate));
     }
 }

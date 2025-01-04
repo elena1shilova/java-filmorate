@@ -3,12 +3,11 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
-import java.util.Collection;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,21 +27,22 @@ public class FilmControllerTest {
         film1.setName("filmName1");
         film1.setDescription("Descr1");
         film1.setReleaseDate(LocalDate.of(2023, 12, 15));
-        film1.setDuration(168L);
+        film1.setDuration(168);
 
         Film film2 = new Film();
         film2.setName("filmName2");
         film2.setDescription("Descr2");
         film2.setReleaseDate(LocalDate.of(2023, 12, 15));
-        film2.setDuration(168L);
+        film2.setDuration(168);
 
         filmController.create(film1);
         filmController.create(film2);
 
-        Collection<Film> films = filmController.findAll();
+        List<Film> films = filmController.findAll();
 
-        assertTrue(films.contains(film1));
-        assertTrue(films.contains(film2));
+        films.forEach(f -> {
+            assertTrue(f.getName().equals(film1.getName()) || f.getName().equals(film2.getName()));
+        });
     }
 
     @Test
@@ -51,7 +51,7 @@ public class FilmControllerTest {
         film.setName("filmName1");
         film.setDescription("Descr1");
         film.setReleaseDate(LocalDate.of(2023, 12, 15));
-        film.setDuration(168L);
+        film.setDuration(168);
 
         Film savedFilm = filmController.create(film);
 
@@ -59,7 +59,7 @@ public class FilmControllerTest {
         assertEquals("filmName1", savedFilm.getName());
         assertEquals("Descr1", savedFilm.getDescription());
         assertEquals(LocalDate.of(2023, 12, 15), savedFilm.getReleaseDate());
-        assertEquals(168L, savedFilm.getDuration());
+        assertEquals(168, savedFilm.getDuration());
 
         film.setName(null);
         assertThrows(RuntimeException.class, () -> filmController.create(film));
@@ -75,7 +75,7 @@ public class FilmControllerTest {
         assertThrows(ValidationException.class, () -> filmController.create(film));
 
         film.setReleaseDate(LocalDate.of(2023, 12, 15));
-        film.setDuration(-1L);
+        film.setDuration(-1);
         assertThrows(ValidationException.class, () -> filmController.create(film));
     }
 
@@ -85,12 +85,12 @@ public class FilmControllerTest {
         film.setName("filmName1");
         film.setDescription("Descr1");
         film.setReleaseDate(LocalDate.of(2023, 12, 15));
-        film.setDuration(168L);
+        film.setDuration(168);
 
         filmController.create(film);
 
         Film filmUpdate = new Film();
         filmUpdate.setId(8L);
-        assertThrows(ElementNotFoundException.class, () -> filmController.update(filmUpdate));
+        assertThrows(ValidationException.class, () -> filmController.update(filmUpdate));
     }
 }

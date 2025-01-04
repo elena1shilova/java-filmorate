@@ -73,4 +73,13 @@ public class FilmService {
         filmUpdate.getIdLike().addAll(filmStorage.addLike(id, userId));
         return filmUpdate;
     }
+
+    public Film getById(Long id) {
+        try {
+            return filmStorage.findById(id);
+
+        } catch (RuntimeException e) {
+            throw new ElementNotFoundException("Фильм не найден");
+        }
+    }
 }

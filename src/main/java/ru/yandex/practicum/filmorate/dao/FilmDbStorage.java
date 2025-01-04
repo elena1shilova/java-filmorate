@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.MotionPictureAssociation;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.time.LocalDate;
@@ -28,26 +27,40 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> findAll() {
-        List<Film> listFilm = jdbcTemplate.query("SELECT id, name, description, releasedate, duration FROM film", new FilmRowMapper());
-        listFilm.forEach(film -> {
-            film.setGenre(jdbcTemplate.queryForList("SELECT genre FROM genre WHERE film_id = ?", String.class, film.getId()));
-            film.setIdLike(new HashSet<>(jdbcTemplate.queryForList("SELECT user_id FROM likes WHERE film_id = ?", Long.class, film.getId())));
-            try {
-                film.setMpa(jdbcTemplate.queryForObject("SELECT rating FROM mpa WHERE film_id = ?", String.class, film.getId()));
-            } catch (EmptyResultDataAccessException e) {
-                film.setMpa(null);
-            }
-        });
-        return listFilm;
+
+        try {
+            List<Film> listFilm = jdbcTemplate.query("SELECT id, name, description, releasedate, duration FROM film", new FilmRowMapper());
+            listFilm.forEach(film -> {
+                film.setGenres(jdbcTemplate.query("SELECT genre_id as id FROM genre WHERE film_id = ?", new GenresRowMapper(), film.getId()));
+                film.setIdLike(new HashSet<>(jdbcTemplate.queryForList("SELECT user_id FROM likes WHERE film_id = ?", Long.class, film.getId())));
+                try {
+                    film.setMpa(jdbcTemplate.queryForObject("SELECT mpa_id FROM mpa WHERE film_id = ?", new MpaRowMapper(), film.getId()));
+                } catch (EmptyResultDataAccessException e) {
+                    film.setMpa(null);
+                }
+            });
+            return listFilm;
+        } catch (EmptyResultDataAccessException e) {
+            throw new ElementNotFoundException("фильмы не найдены");
+        }
+
     }
 
     @Override
     public Film findById(Long id) {
-        Film film = jdbcTemplate.queryForObject("SELECT id, name, description, releasedate, duration FROM film where id = ?", new FilmRowMapper(), id);
-        if (film == null) {
+        try {
+            Film film = jdbcTemplate.queryForObject("SELECT id, name, description, releasedate, duration FROM film where id = ?", new FilmRowMapper(), id);
+            film.setGenres(jdbcTemplate.query("SELECT genre_id as id FROM genre WHERE film_id = ?", new GenresRowMapper(), film.getId()));
+            film.setIdLike(new HashSet<>(jdbcTemplate.queryForList("SELECT user_id FROM likes WHERE film_id = ?", Long.class, film.getId())));
+            try {
+                film.setMpa(jdbcTemplate.queryForObject("SELECT mpa_id FROM mpa WHERE film_id = ?", new MpaRowMapper(), film.getId()));
+            } catch (EmptyResultDataAccessException e) {
+                film.setMpa(null);
+            }
+            return film;
+        } catch (EmptyResultDataAccessException e) {
             throw new ElementNotFoundException("id = " + id + " не найден");
         }
-        return film;
     }
 
     @Override
@@ -71,19 +84,30 @@ public class FilmDbStorage implements FilmStorage {
                 )
         );
 
-        if (film.getGenre() != null && !film.getGenre().isEmpty()) {
-            film.getGenre().forEach(g ->
-                    jdbcTemplate.update(
-                            "INSERT INTO genre (film_id, genre) VALUES (?, ?)",
-                            film.getId(), g)
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+
+            film.getGenres().forEach(g ->
+                    {
+                        try {
+                            jdbcTemplate.update(
+                                    "INSERT INTO genre (film_id, genre_id) VALUES (?, ?)",
+                                    film.getId(), g.getId());
+                        } catch (RuntimeException e) {
+                            throw new ValidationException("Ошибка сохранения с ид жанра " + g.getId());
+                        }
+                    }
             );
+
 
         }
         if (film.getMpa() != null) {
-            jdbcTemplate.update(
-                    "INSERT INTO mpa (film_id, rating, description) VALUES (?, ?, ?)",
-                    film.getId(), film.getMpa(),
-                    MotionPictureAssociation.valueOf(film.getMpa()).getTitle());
+            try {
+                jdbcTemplate.update(
+                        "INSERT INTO mpa (film_id, mpa_id) VALUES (?, ?)",
+                        film.getId(), film.getMpa().getId());
+            } catch (RuntimeException e) {
+                throw new ValidationException("Ошибка сохранения по ид рейтинга " + film.getMpa().getId());
+            }
         }
 
         log.debug("Фильм успешно создан");

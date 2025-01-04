@@ -72,7 +72,7 @@ public class UserService {
         if (user == null || userFriends == null) {
             throw new ElementNotFoundException("Id пользователя/друга не найдено");
         }
-        deleteFriends(id, otherId);
+        userStorage.deleteFriends(id, otherId);
     }
 
     public List<User> getUserFriendsCommon(Long id, Long otherId) {

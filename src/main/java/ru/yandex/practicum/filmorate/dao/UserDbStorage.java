@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dao;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
@@ -10,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -27,23 +29,34 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> findAll() {
-        List<User> listUser = jdbcTemplate.query("SELECT id, email, login, name, birthday FROM users", new UserRowMapper());
-        listUser.forEach(user -> {
-            user.setIdFriends(
-                    new HashSet<>(jdbcTemplate.queryForList("SELECT friend_id FROM friends WHERE user_id = ?", Long.class, user.getId()))
-            );
-        });
 
-        return listUser;
+        try {
+            List<User> listUser = jdbcTemplate.query("SELECT id, email, login, name, birthday FROM users", new UserRowMapper());
+            listUser.forEach(user -> {
+                user.setIdFriends(
+                        new HashSet<>(jdbcTemplate.queryForList("SELECT friend_id FROM friends WHERE user_id = ?", Long.class, user.getId()))
+                );
+            });
+
+            return listUser;
+
+        } catch (EmptyResultDataAccessException e) {
+            throw new ElementNotFoundException("Пользователи не найдены");
+        }
     }
 
     @Override
     public User findById(Long id) {
-        User user = jdbcTemplate.queryForObject("SELECT id, email, login, name, birthday FROM users" + " where id = ?", new UserRowMapper(), id);
-        if (user == null) {
+        try {
+            User user = jdbcTemplate.queryForObject("SELECT id, email, login, name, birthday FROM users  where id = ?", new UserRowMapper(), id);
+            //assert user != null;
+            user.setIdFriends(
+                    new HashSet<>(jdbcTemplate.queryForList("SELECT friend_id FROM friends WHERE user_id = ?", Long.class, user.getId()))
+            );
+            return user;
+        } catch (EmptyResultDataAccessException e) {
             throw new ElementNotFoundException("id = " + id + " не найден");
         }
-        return user;
     }
 
     @Override
@@ -84,7 +97,6 @@ public class UserDbStorage implements UserStorage {
 
             validUser(newUser);
 
-            //User oldUser = user.;
             List<String> emailList = jdbcTemplate.queryForList("select email from users", String.class);
 
             if (!oldUser.getEmail().equals(newUser.getEmail()) && emailList.contains(newUser.getEmail())) {
@@ -131,24 +143,40 @@ public class UserDbStorage implements UserStorage {
 
     public List<Long> updateFriends(Long idUser, Long idFriend) {
         boolean friendship = false;
-        List<Long> idFr = jdbcTemplate.queryForList("SELECT user_id FROM friends WHERE friend_id = ?", Long.class, idUser);
 
-        if (idFr.contains(idFriend)) {
-            friendship = true;
+        try {
+            List<Long> idFr = jdbcTemplate.queryForList("SELECT user_id FROM friends WHERE friend_id = ?", Long.class, idUser);
+
+            if (idFr.contains(idFriend)) {
+                friendship = true;
+            }
+        } catch (EmptyResultDataAccessException e) {
+            log.debug("Друзей нет");
         }
+
+
         jdbcTemplate.update(
-                "INSERT INTO users (user_id, film_id,) VALUES (?, ?, ?, ?)",
+                "INSERT INTO friends (user_id, friend_id, friendship) VALUES (?, ?, ?)",
                 idUser, idFriend, friendship);
 
-        List<Long> idFr2 = jdbcTemplate.queryForList("SELECT friend_id FROM friends WHERE user_id = ?", Long.class, idUser);
+        List<Long> idFr2 = new ArrayList<>();
+        try {
+            idFr2.addAll(jdbcTemplate.queryForList("SELECT friend_id FROM friends WHERE user_id = ?", Long.class, idUser));
+        } catch (EmptyResultDataAccessException e) {
+            log.debug("Нет друзей");
+        }
         idFr2.add(idFriend);
         return idFr2;
     }
 
     public void deleteFriends(Long idUser, Long idFriend) {
         jdbcTemplate.update(
-                "DELETE FROM users WHERE user_id = ? AND friend_id = ?",
-                idUser, idFriend, false);
+                "DELETE FROM friends WHERE user_id = ? AND friend_id = ?",
+                idUser, idFriend);
+
+        jdbcTemplate.update(
+                "UPDATE friends SET friendship = ? WHERE friend_id = ? AND user_id = ?",
+                false, idUser, idFriend);
     }
 
     private void validUser(User user) {

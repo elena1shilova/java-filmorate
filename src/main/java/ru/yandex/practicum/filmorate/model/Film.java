@@ -5,8 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.yandex.practicum.filmorate.dao.Mpa;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,8 +24,9 @@ public class Film {
     private String name;
     private String description;
     private LocalDate releaseDate;
-    private Long duration;
+    private Integer duration;
     private Set<Long> idLike = new HashSet<>();
-    private List<String> genre;
-    private String mpa;
+    // private List<Long> genre = new ArrayList<>();
+    private List<Genres> genres = new ArrayList<>();
+    private Mpa mpa;
 }
