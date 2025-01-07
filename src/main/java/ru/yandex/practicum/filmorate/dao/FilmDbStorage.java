@@ -31,10 +31,10 @@ public class FilmDbStorage implements FilmStorage {
         try {
             List<Film> listFilm = jdbcTemplate.query("SELECT id, name, description, releasedate, duration FROM film", new FilmRowMapper());
             listFilm.forEach(film -> {
-                film.setGenres(jdbcTemplate.query("SELECT genre_id as id FROM genre WHERE film_id = ?", new GenresRowMapper(), film.getId()));
+                film.setGenres(jdbcTemplate.query("SELECT g2.id, g2.genre as name FROM genre g1 JOIN genre_info g2 on g2.id = g1.genre_id WHERE g1.film_id = ?", new GenresRowMapper(), film.getId()));
                 film.setIdLike(new HashSet<>(jdbcTemplate.queryForList("SELECT user_id FROM likes WHERE film_id = ?", Long.class, film.getId())));
                 try {
-                    film.setMpa(jdbcTemplate.queryForObject("SELECT mpa_id FROM mpa WHERE film_id = ?", new MpaRowMapper(), film.getId()));
+                    film.setMpa(jdbcTemplate.queryForObject("SELECT m2.id, rating as name FROM mpa m1 JOIN mpa_info m2 on m2.id = m1.mpa_id WHERE m1.film_id = ?", new MpaRowMapper(), film.getId()));
                 } catch (EmptyResultDataAccessException e) {
                     film.setMpa(null);
                 }
@@ -50,10 +50,10 @@ public class FilmDbStorage implements FilmStorage {
     public Film findById(Long id) {
         try {
             Film film = jdbcTemplate.queryForObject("SELECT id, name, description, releasedate, duration FROM film where id = ?", new FilmRowMapper(), id);
-            film.setGenres(jdbcTemplate.query("SELECT genre_id as id FROM genre WHERE film_id = ?", new GenresRowMapper(), film.getId()));
+            film.setGenres(jdbcTemplate.query("SELECT g2.id, g2.genre as name FROM genre g1 JOIN genre_info g2 on g2.id = g1.genre_id WHERE g1.film_id = ?", new GenresRowMapper(), film.getId()));
             film.setIdLike(new HashSet<>(jdbcTemplate.queryForList("SELECT user_id FROM likes WHERE film_id = ?", Long.class, film.getId())));
             try {
-                film.setMpa(jdbcTemplate.queryForObject("SELECT mpa_id FROM mpa WHERE film_id = ?", new MpaRowMapper(), film.getId()));
+                film.setMpa(jdbcTemplate.queryForObject("SELECT m2.id, rating as name FROM mpa m1 JOIN mpa_info m2 on m2.id = m1.mpa_id WHERE m1.film_id = ?", new MpaRowMapper(), film.getId()));
             } catch (EmptyResultDataAccessException e) {
                 film.setMpa(null);
             }
@@ -88,9 +88,13 @@ public class FilmDbStorage implements FilmStorage {
 
             film.getGenres().forEach(g -> {
                         try {
-                            jdbcTemplate.update(
-                                    "INSERT INTO genre (film_id, genre_id) VALUES (?, ?)",
-                                    film.getId(), g.getId());
+                            List<Long> idGenre = jdbcTemplate.queryForList("SELECT genre_id FROM genre WHERE film_id = ?", Long.class, film.getId());
+
+                            if(idGenre.size() == 0 || !idGenre.contains(g.getId())) {
+                                jdbcTemplate.update(
+                                        "INSERT INTO genre (film_id, genre_id) VALUES (?, ?)",
+                                        film.getId(), g.getId());
+                            }
                         } catch (RuntimeException e) {
                             throw new ValidationException("Ошибка сохранения с ид жанра " + g.getId());
                         }
