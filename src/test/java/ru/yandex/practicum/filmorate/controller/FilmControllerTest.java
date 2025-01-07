@@ -1,8 +1,12 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
+import ru.yandex.practicum.filmorate.dao.FilmDbStorage;
 import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -15,11 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest
+@JdbcTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@Import({FilmDbStorage.class})
 public class FilmControllerTest {
 
-    @Autowired
-    private FilmController filmController;
+    private final FilmDbStorage filmStorage;
 
     @Test
     public void testReturnsAllF() {
@@ -36,10 +42,10 @@ public class FilmControllerTest {
         film2.setReleaseDate(LocalDate.of(2023, 12, 15));
         film2.setDuration(168);
 
-        filmController.create(film1);
-        filmController.create(film2);
+        filmStorage.create(film1);
+        filmStorage.create(film2);
 
-        List<Film> films = filmController.findAll();
+        List<Film> films = filmStorage.findAll();
 
         films.forEach(f -> {
             assertTrue(f.getName().equals(film1.getName()) || f.getName().equals(film2.getName()));
@@ -54,7 +60,7 @@ public class FilmControllerTest {
         film.setReleaseDate(LocalDate.of(2023, 12, 15));
         film.setDuration(168);
 
-        Film savedFilm = filmController.create(film);
+        Film savedFilm = filmStorage.create(film);
 
         assertNotNull(savedFilm.getId());
         assertEquals("filmName1", savedFilm.getName());
@@ -63,21 +69,21 @@ public class FilmControllerTest {
         assertEquals(168, savedFilm.getDuration());
 
         film.setName(null);
-        assertThrows(RuntimeException.class, () -> filmController.create(film));
+        assertThrows(RuntimeException.class, () -> filmStorage.create(film));
 
         film.setName("filmName1");
         film.setDescription("1111111111111111111111111111111111111111111111111111111111111111111" +
                 "111111111111111111111111111111111111111111111111111111111111111111111111111111111" +
                 "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111");
-        assertThrows(ValidationException.class, () -> filmController.create(film));
+        assertThrows(ValidationException.class, () -> filmStorage.create(film));
 
         film.setDescription("Descr1");
         film.setReleaseDate(LocalDate.of(1894, 12, 15));
-        assertThrows(ValidationException.class, () -> filmController.create(film));
+        assertThrows(ValidationException.class, () -> filmStorage.create(film));
 
         film.setReleaseDate(LocalDate.of(2023, 12, 15));
         film.setDuration(-1);
-        assertThrows(ValidationException.class, () -> filmController.create(film));
+        assertThrows(ValidationException.class, () -> filmStorage.create(film));
     }
 
     @Test
@@ -88,10 +94,10 @@ public class FilmControllerTest {
         film.setReleaseDate(LocalDate.of(2023, 12, 15));
         film.setDuration(168);
 
-        filmController.create(film);
+        filmStorage.create(film);
 
         Film filmUpdate = new Film();
         filmUpdate.setId(film.getId() + 5);
-        assertThrows(ElementNotFoundException.class, () -> filmController.update(filmUpdate));
+        assertThrows(ElementNotFoundException.class, () -> filmStorage.update(filmUpdate));
     }
 }
