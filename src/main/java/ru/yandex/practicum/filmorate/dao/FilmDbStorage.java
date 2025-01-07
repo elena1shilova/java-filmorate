@@ -90,7 +90,7 @@ public class FilmDbStorage implements FilmStorage {
                         try {
                             List<Long> idGenre = jdbcTemplate.queryForList("SELECT genre_id FROM genre WHERE film_id = ?", Long.class, film.getId());
 
-                            if(idGenre.size() == 0 || !idGenre.contains(g.getId())) {
+                            if (idGenre.size() == 0 || !idGenre.contains(g.getId())) {
                                 jdbcTemplate.update(
                                         "INSERT INTO genre (film_id, genre_id) VALUES (?, ?)",
                                         film.getId(), g.getId());
