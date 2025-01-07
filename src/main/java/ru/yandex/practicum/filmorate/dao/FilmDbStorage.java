@@ -153,7 +153,7 @@ public class FilmDbStorage implements FilmStorage {
         List<Long> idLike = jdbcTemplate.queryForList("SELECT user_id FROM likes WHERE film_id = ?", Long.class, idFilm);
         if (!idLike.contains(userId)) {
             jdbcTemplate.update(
-                    "UPDATE likes SET film_id = ?, user_id = ?",
+                    "INSERT INTO likes (film_id, user_id) VALUES (?, ?)",
                     idFilm, userId);
             idLike.add(userId);
         }
@@ -163,7 +163,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void deleteLike(Long idFilm, Long userId) {
         jdbcTemplate.update(
-                "DELETE FROM likes WHERE film_id = AND user_id = ?",
+                "DELETE FROM likes WHERE film_id = ? AND user_id = ?",
                 idFilm, userId);
     }
 
