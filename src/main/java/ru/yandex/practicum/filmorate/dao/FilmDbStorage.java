@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.mapper.GenresRowMapper;
 import ru.yandex.practicum.filmorate.mapper.MpaRowMapper;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genres;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.sql.Date;
@@ -74,23 +75,6 @@ public class FilmDbStorage implements FilmStorage {
     public Film create(Film film) {
 
         try {
-            /*
-            		String sqlQuery = "insert into FILMS (NAME, DESCRIPTION, RELEASE_DATE, DURATION, RATE, MPA_ID) values (?, ?, ?, ?, ?, ?)";
-
-		KeyHolder keyHolder = new GeneratedKeyHolder();
-		jdbcTemplate.update(connection -> {
-			PreparedStatement stmt = connection.prepareStatement(sqlQuery, new String[]{"FILM_ID"});
-			stmt.setString(1, film.getName());
-			stmt.setString(2, film.getDescription());
-			stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
-			stmt.setLong(4, film.getDuration());
-			stmt.setLong(5, film.getRate());
-			stmt.setLong(6, film.getMpa().getId());
-			return stmt;
-		}, keyHolder);
-		film.setId(keyHolder.getKey().longValue());
-             */
-
             String sqlQuery = "INSERT INTO film (name, description, releaseDate, duration, mpa_id) VALUES (?, ?, ?, ?, ?)";
 
             KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -109,20 +93,7 @@ public class FilmDbStorage implements FilmStorage {
             throw new ValidationException("ошибка сохранения по ид mpa");
         }
 
-        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-
-            film.getGenres().forEach(g -> {
-                        try {
-                            jdbcTemplate.update(
-                                    "merge into genre (film_id, genre_id) values (?, ?)",
-                                    film.getId(), g.getId());
-                        } catch (RuntimeException e) {
-                            throw new ValidationException("Ошибка сохранения с ид жанра " + g.getId());
-                        }
-                    }
-            );
-        }
-
+        saveGenres(film);
         log.debug("Фильм успешно создан");
         return film;
     }
@@ -140,6 +111,8 @@ public class FilmDbStorage implements FilmStorage {
                 newFilm.getName(), newFilm.getDescription(),
                 newFilm.getReleaseDate(),
                 newFilm.getDuration());
+
+        saveGenres(film);
 
         return newFilm;
     }
@@ -174,4 +147,24 @@ public class FilmDbStorage implements FilmStorage {
                 "DELETE FROM likes WHERE film_id = ? AND user_id = ?",
                 idFilm, userId);
     }
+
+    private void saveGenres(Film film) {
+        final Long filmId = film.getId();
+        jdbcTemplate.update("delete from GENRE where FILM_ID = ?", filmId);
+        final List<Genres> genres = film.getGenres();
+        if (genres == null || genres.isEmpty()) {
+            return;
+        }
+        film.getGenres().forEach(g -> {
+                    try {
+                        jdbcTemplate.update(
+                                "merge into genre (film_id, genre_id) values (?, ?)",
+                                film.getId(), g.getId());
+                    } catch (RuntimeException e) {
+                        throw new ValidationException("Ошибка сохранения с ид жанра " + g.getId());
+                    }
+                }
+        );
+    }
+
 }
