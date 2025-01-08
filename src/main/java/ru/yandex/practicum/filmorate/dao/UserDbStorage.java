@@ -22,7 +22,6 @@ public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
-
     public UserDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -32,11 +31,6 @@ public class UserDbStorage implements UserStorage {
 
         try {
             List<User> listUser = jdbcTemplate.query("SELECT id, email, login, name, birthday FROM users", new UserRowMapper());
-//            listUser.forEach(user -> {
-//                user.setIdFriends(
-//                        new HashSet<>(jdbcTemplate.queryForList("SELECT friend_id FROM friends WHERE user_id = ?", Long.class, user.getId()))
-//                );
-//            });
 
             return listUser;
 
@@ -130,7 +124,7 @@ public class UserDbStorage implements UserStorage {
     public List<Long> updateFriends(Long idUser, Long idFriend) {
 
         jdbcTemplate.update(
-                "INSERT INTO friends (user_id, friend_id) VALUES (?, ?, ?)",
+                "INSERT INTO friends (user_id, friend_id) VALUES (?, ?)",
                 idUser, idFriend);
 
         List<Long> idFr2 = new ArrayList<>();
