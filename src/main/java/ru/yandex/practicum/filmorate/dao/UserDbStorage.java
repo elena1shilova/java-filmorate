@@ -22,10 +22,6 @@ public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
-    final String sqlQuery = "select * from USERS u, FRIENDS f, FRIENDS o " +
-            "where u.ID = f.FRIEND_ID AND u.ID = o.FRIEND_ID AND f.USER_ID = ? AND o.USER_ID = ?";
-
-
     public UserDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -45,7 +41,7 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User findById(Long id) {
         try {
-            User user = jdbcTemplate.queryForObject("SELECT id, email, login, birthday FROM users  where id = ?", new UserRowMapper(), id);
+            User user = jdbcTemplate.queryForObject("SELECT id, email, login, name, birthday FROM users  where id = ?", new UserRowMapper(), id);
 
             user.setIdFriends(
                     new HashSet<>(jdbcTemplate.queryForList("SELECT friend_id FROM friends WHERE user_id = ?", Long.class, user.getId()))
@@ -148,7 +144,11 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User getFriends(Long id, Long otherId) {
-        return jdbcTemplate.queryForObject(sqlQuery, new UserRowMapper(), id, otherId);
+        try {
+            return jdbcTemplate.queryForObject("SELECT u.id, email, login, name, birthday FROM users u JOIN friends f on f.user_id = u.id where u.id = ? and f.friend_id = ?", new UserRowMapper(), id, otherId);
+        } catch (RuntimeException e) {
+            throw new ElementNotFoundException("Id пользователя/друга не найдено");
+        }
     }
 
     @Override
