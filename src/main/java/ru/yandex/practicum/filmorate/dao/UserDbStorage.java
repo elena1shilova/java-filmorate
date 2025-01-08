@@ -22,7 +22,7 @@ public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
-    final String SQL_QUERY = "select * from USERS u, FRIENDS f, FRIENDS o " +
+    final String sqlQuery = "select * from USERS u, FRIENDS f, FRIENDS o " +
             "where u.USER_ID = f.FRIEND_ID AND u.USER_ID = o.FRIEND_ID AND f.USER_ID = ? AND o.USER_ID = ?";
 
 
@@ -149,6 +149,6 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User getFriends(Long id, Long otherId) {
-        return jdbcTemplate.queryForObject(SQL_QUERY, new UserRowMapper(), id, otherId);
+        return jdbcTemplate.queryForObject(sqlQuery, new UserRowMapper(), id, otherId);
     }
 }
