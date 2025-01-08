@@ -23,7 +23,7 @@ public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
 
     final String sqlQuery = "select * from USERS u, FRIENDS f, FRIENDS o " +
-            "where u.USER_ID = f.FRIEND_ID AND u.USER_ID = o.FRIEND_ID AND f.USER_ID = ? AND o.USER_ID = ?";
+            "where u.ID = f.FRIEND_ID AND u.ID = o.FRIEND_ID AND f.USER_ID = ? AND o.USER_ID = ?";
 
 
     public UserDbStorage(JdbcTemplate jdbcTemplate) {
@@ -34,9 +34,8 @@ public class UserDbStorage implements UserStorage {
     public List<User> findAll() {
 
         try {
-            List<User> listUser = jdbcTemplate.query("SELECT id, email, login, name, birthday FROM users", new UserRowMapper());
 
-            return listUser;
+            return jdbcTemplate.query("SELECT id, email, login, name, birthday FROM users", new UserRowMapper());
 
         } catch (EmptyResultDataAccessException e) {
             throw new ElementNotFoundException("Пользователи не найдены");
@@ -150,5 +149,10 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User getFriends(Long id, Long otherId) {
         return jdbcTemplate.queryForObject(sqlQuery, new UserRowMapper(), id, otherId);
+    }
+
+    @Override
+    public List<User> getUserFriends(Long id) {
+        return jdbcTemplate.query("select u.id, u.email, u.login, u.birthday from USERS u, FRIENDS where u.ID = FRIENDS.FRIEND_ID AND FRIENDS.USER_ID = ?", new UserRowMapper(), id);
     }
 }
