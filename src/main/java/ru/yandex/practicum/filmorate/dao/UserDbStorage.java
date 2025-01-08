@@ -50,9 +50,6 @@ public class UserDbStorage implements UserStorage {
             user.setIdFriends(
                     new HashSet<>(jdbcTemplate.queryForList("SELECT friend_id FROM friends WHERE user_id = ?", Long.class, user.getId()))
             );
-            if (user.getIdFriends().isEmpty()) {
-                throw new ElementNotFoundException("друзей не найдено");
-            }
             return user;
         } catch (EmptyResultDataAccessException e) {
             throw new ElementNotFoundException("id = " + id + " не найден");
@@ -156,12 +153,15 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getUserFriends(Long id) {
-        List<User> list = jdbcTemplate.query(
-                "select u.id, u.email, u.login, u.birthday from USERS u, FRIENDS where u.ID = FRIENDS.FRIEND_ID AND FRIENDS.USER_ID = ?",
-                new UserRowMapper(), id);
-        if (list.isEmpty()) {
-            throw new ElementNotFoundException("Друзья не найдены");
+
+        Long idFr = jdbcTemplate.queryForObject("select id from users where id = ?", Long.class, id);
+
+        if (idFr == null) {
+            throw new ElementNotFoundException("id = " + id + " не найден");
         }
+
+        List<User> list = jdbcTemplate.query("select u.id, u.email, u.login, u.birthday from USERS u, FRIENDS where u.ID = FRIENDS.FRIEND_ID AND FRIENDS.USER_ID = ?", new UserRowMapper(), id);
+
         return list;
     }
 }
