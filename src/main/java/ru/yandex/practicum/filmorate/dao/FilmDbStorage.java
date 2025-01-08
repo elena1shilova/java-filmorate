@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.mapper.GenresRowMapper;
-import ru.yandex.practicum.filmorate.mapper.MpaRowMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genres;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -37,15 +36,11 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> findAll() {
 
         try {
-            List<Film> listFilm = jdbcTemplate.query("SELECT id, name, description, releasedate, duration FROM film", new FilmRowMapper());
+            List<Film> listFilm = jdbcTemplate.query("SELECT f.id, name, description, releasedate, duration, m.id mpa_id, m.rating as mpa_name FROM film f join mpa_info m on m.id = f.mpa_id", new FilmRowMapper());
             listFilm.forEach(film -> {
                 film.setGenres(jdbcTemplate.query("SELECT g2.id, g2.genre as name FROM genre g1 JOIN genre_info g2 on g2.id = g1.genre_id WHERE g1.film_id = ?", new GenresRowMapper(), film.getId()));
                 film.setIdLike(new HashSet<>(jdbcTemplate.queryForList("SELECT user_id FROM likes WHERE film_id = ?", Long.class, film.getId())));
-                try {
-                    film.setMpa(jdbcTemplate.queryForObject("SELECT m1.mpa_id id, m2.rating as name FROM film m1 JOIN mpa_info m2 on m2.id = m1.mpa_id WHERE m1.id = ?", new MpaRowMapper(), film.getId()));
-                } catch (EmptyResultDataAccessException e) {
-                    film.setMpa(null);
-                }
+
             });
             return listFilm;
         } catch (EmptyResultDataAccessException e) {
@@ -57,14 +52,10 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film findById(Long id) {
         try {
-            Film film = jdbcTemplate.queryForObject("SELECT id, name, description, releasedate, duration FROM film where id = ?", new FilmRowMapper(), id);
+            Film film = jdbcTemplate.queryForObject("SELECT f.id, name, description, releasedate, duration, m.id mpa_id, m.rating as mpa_name FROM film f join mpa_info m on m.id = f.mpa_id where f.id = ?", new FilmRowMapper(), id);
 
             film.setGenres(jdbcTemplate.query("SELECT g2.id, g2.genre as name FROM genre g1 JOIN genre_info g2 on g2.id = g1.genre_id WHERE g1.film_id = ?", new GenresRowMapper(), film.getId()));
-            try {
-                film.setMpa(jdbcTemplate.queryForObject("SELECT m1.mpa_id id, m2.rating as name FROM film m1 JOIN mpa_info m2 on m2.id = m1.mpa_id WHERE m1.id = ?", new MpaRowMapper(), film.getId()));
-            } catch (EmptyResultDataAccessException e) {
-                film.setMpa(null);
-            }
+
             return film;
         } catch (EmptyResultDataAccessException e) {
             throw new ElementNotFoundException("id = " + id + " не найден");
@@ -166,5 +157,4 @@ public class FilmDbStorage implements FilmStorage {
                 }
         );
     }
-
 }

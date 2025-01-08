@@ -31,14 +31,14 @@ public class FilmControllerTest {
         film1.setDescription("Descr1");
         film1.setReleaseDate(LocalDate.of(2023, 12, 15));
         film1.setDuration(168);
-        film1.setMpa(new Mpa(1L, null, null));
+        film1.setMpa(new Mpa(1L, null));
 
         Film film2 = new Film();
         film2.setName("filmName2");
         film2.setDescription("Descr2");
         film2.setReleaseDate(LocalDate.of(2023, 12, 15));
         film2.setDuration(168);
-        film2.setMpa(new Mpa(1L, null, null));
+        film2.setMpa(new Mpa(1L, null));
 
         filmStorage.create(film1);
         filmStorage.create(film2);
