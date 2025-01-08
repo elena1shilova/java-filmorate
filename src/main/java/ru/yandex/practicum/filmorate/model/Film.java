@@ -26,5 +26,5 @@ public class Film {
     private Integer duration;
     private Set<Long> idLike = new HashSet<>();
     private List<Genres> genres = new ArrayList<>();
-    private Mpa mpa;
+    private Mpa mpa = new Mpa();
 }

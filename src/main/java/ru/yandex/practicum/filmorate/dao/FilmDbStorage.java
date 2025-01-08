@@ -90,7 +90,7 @@ public class FilmDbStorage implements FilmStorage {
             film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
 
         } catch (RuntimeException e) {
-            throw new ValidationException("ошибка сохранения по ид mpa");
+            throw new ValidationException("ошибка сохранения " + e);
         }
 
         saveGenres(film);
