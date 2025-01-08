@@ -160,7 +160,7 @@ public class UserDbStorage implements UserStorage {
             throw new ElementNotFoundException("id = " + id + " не найден");
         }
 
-        List<User> list = jdbcTemplate.query("select u.id, u.email, u.login, u.birthday from USERS u, FRIENDS where u.ID = FRIENDS.FRIEND_ID AND FRIENDS.USER_ID = ?", new UserRowMapper(), id);
+        List<User> list = jdbcTemplate.query("select u.id, u.email, u.login, name, u.birthday from USERS u, FRIENDS where u.ID = FRIENDS.FRIEND_ID AND FRIENDS.USER_ID = ?", new UserRowMapper(), id);
 
         return list;
     }
