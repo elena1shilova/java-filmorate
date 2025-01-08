@@ -23,4 +23,6 @@ public interface UserStorage {
     User getFriends(Long id, Long otherId);
 
     List<User> getUserFriends(Long id);
+
+    List<User> getUserFriendsCommon(Long id, Long otherId);
 }

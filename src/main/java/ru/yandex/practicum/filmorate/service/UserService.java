@@ -94,12 +94,7 @@ public class UserService {
         if (id == null || otherId == null) {
             throw new RuntimeException("Id пользователя/другого пользователя должен быть указан");
         }
-        userStorage.findById(id);
-        userStorage.findById(otherId);
-        return userStorage.findById(id).getIdFriends().stream()
-                .filter(userStorage.findById(otherId).getIdFriends()::contains)
-                .map(userStorage::findById)
-                .toList();
+        return userStorage.getUserFriendsCommon(id, otherId);
     }
 
     private void validUser(User user) {
