@@ -40,6 +40,9 @@ public class FilmService {
     }
 
     public Film update(@Valid @RequestBody Film newFilm) {
+        if (newFilm.getId() == null) {
+            throw new RuntimeException("Id должен быть указан");
+        }
         validFilm(newFilm);
         return filmStorage.update(newFilm);
     }

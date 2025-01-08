@@ -103,9 +103,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film update(Film newFilm) {
-        if (newFilm.getId() == null) {
-            throw new RuntimeException("Id должен быть указан");
-        }
+
         Film film = findById(newFilm.getId());
         if (film == null) {
             throw new ElementNotFoundException("id = " + newFilm.getId() + " не найден");

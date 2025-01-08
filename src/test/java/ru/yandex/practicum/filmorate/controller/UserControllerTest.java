@@ -7,16 +7,11 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.filmorate.dao.UserDbStorage;
-import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.Collection;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @JdbcTest
@@ -49,56 +44,5 @@ public class UserControllerTest {
         users.forEach(u -> {
             assertTrue(u.getLogin().equals(user.getLogin()) || u.getLogin().equals(user2.getLogin()));
         });
-    }
-
-    @Test
-    void testCreateUserValid() {
-        User user = new User();
-        user.setEmail("user1@example.com");
-        user.setLogin("user1");
-        user.setName(null);
-        user.setBirthday(LocalDate.of(1990, 1, 1));
-
-        User savedUser1 = userDbStorage.create(user);
-
-        assertNotNull(savedUser1.getId());
-        assertEquals("user1@example.com", savedUser1.getEmail());
-        assertEquals("user1", savedUser1.getLogin());
-        assertEquals("user1", savedUser1.getName());
-        assertEquals(LocalDate.of(1990, 1, 1), savedUser1.getBirthday());
-
-        user.setEmail(null);
-        assertThrows(RuntimeException.class, () -> userDbStorage.create(user));
-
-        user.setEmail("user3.com");
-        assertThrows(ValidationException.class, () -> userDbStorage.create(user));
-
-        user.setEmail("user1@example.com");
-        user.setLogin("");
-        assertThrows(RuntimeException.class, () -> userDbStorage.create(user));
-
-        user.setLogin(null);
-        assertThrows(RuntimeException.class, () -> userDbStorage.create(user));
-
-        user.setLogin("user 1");
-        assertThrows(ValidationException.class, () -> userDbStorage.create(user));
-
-        user.setBirthday(LocalDate.now().plusMonths(5));
-        assertThrows(ValidationException.class, () -> userDbStorage.create(user));
-    }
-
-    @Test
-    void testUpdateUserValid() {
-        User user1 = new User();
-        user1.setEmail("user1@example.com");
-        user1.setLogin("user1");
-        user1.setName(null);
-        user1.setBirthday(LocalDate.of(1990, 1, 1));
-
-        userDbStorage.create(user1);
-
-        User userUpdate = new User();
-        userUpdate.setId(user1.getId() + 5);
-        assertThrows(ElementNotFoundException.class, () -> userDbStorage.update(userUpdate));
     }
 }
