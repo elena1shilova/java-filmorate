@@ -55,8 +55,9 @@ public class UserService {
         if (id == null) {
             throw new RuntimeException("Id пользователя должен быть указан");
         }
-
-        return userStorage.getUserFriends(id);
+        return userStorage.findById(id).getIdFriends().stream()
+                .map(userStorage::findById)
+                .toList();
     }
 
     public List<User> updateFriends(Long id, Long otherId) {
