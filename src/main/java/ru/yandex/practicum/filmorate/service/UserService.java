@@ -55,6 +55,7 @@ public class UserService {
         if (id == null) {
             throw new RuntimeException("Id пользователя должен быть указан");
         }
+        userStorage.findById(id);
         return userStorage.getUserFriends(id);
     }
 
@@ -81,6 +82,8 @@ public class UserService {
             throw new RuntimeException("Id пользователя/друга должен быть указан");
         }
 
+        userStorage.findById(id);
+        userStorage.findById(otherId);
         User user = userStorage.getFriends(id, otherId);
         if (user == null) {
             throw new ElementNotFoundException("Id пользователя/друга не найдено");
@@ -92,6 +95,8 @@ public class UserService {
         if (id == null || otherId == null) {
             throw new RuntimeException("Id пользователя/другого пользователя должен быть указан");
         }
+        userStorage.findById(id);
+        userStorage.findById(otherId);
         return userStorage.findById(id).getIdFriends().stream()
                 .filter(userStorage.findById(otherId).getIdFriends()::contains)
                 .map(userStorage::findById)

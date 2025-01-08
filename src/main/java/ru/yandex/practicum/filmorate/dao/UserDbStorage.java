@@ -45,7 +45,7 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User findById(Long id) {
         try {
-            User user = jdbcTemplate.queryForObject("SELECT id, email, login, name, birthday FROM users  where id = ?", new UserRowMapper(), id);
+            User user = jdbcTemplate.queryForObject("SELECT id, email, login, birthday FROM users  where id = ?", new UserRowMapper(), id);
 
             user.setIdFriends(
                     new HashSet<>(jdbcTemplate.queryForList("SELECT friend_id FROM friends WHERE user_id = ?", Long.class, user.getId()))
