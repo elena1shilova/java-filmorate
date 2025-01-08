@@ -85,10 +85,9 @@ public class UserService {
         userStorage.findById(id);
         userStorage.findById(otherId);
         User user = userStorage.getFriends(id, otherId);
-        if (user == null) {
-            throw new ElementNotFoundException("Id пользователя/друга не найдено");
+        if (user != null) {
+            userStorage.deleteFriends(id, otherId);
         }
-        userStorage.deleteFriends(id, otherId);
     }
 
     public List<User> getUserFriendsCommon(Long id, Long otherId) {

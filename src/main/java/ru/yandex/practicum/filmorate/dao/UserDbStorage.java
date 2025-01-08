@@ -147,7 +147,7 @@ public class UserDbStorage implements UserStorage {
         try {
             return jdbcTemplate.queryForObject("SELECT u.id, email, login, name, birthday FROM users u JOIN friends f on f.user_id = u.id where u.id = ? and f.friend_id = ?", new UserRowMapper(), id, otherId);
         } catch (RuntimeException e) {
-            throw new ElementNotFoundException("Id пользователя/друга не найдено");
+            return null;
         }
     }
 
