@@ -7,10 +7,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.UserRowMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -32,11 +32,11 @@ public class UserDbStorage implements UserStorage {
 
         try {
             List<User> listUser = jdbcTemplate.query("SELECT id, email, login, name, birthday FROM users", new UserRowMapper());
-            listUser.forEach(user -> {
-                user.setIdFriends(
-                        new HashSet<>(jdbcTemplate.queryForList("SELECT friend_id FROM friends WHERE user_id = ?", Long.class, user.getId()))
-                );
-            });
+//            listUser.forEach(user -> {
+//                user.setIdFriends(
+//                        new HashSet<>(jdbcTemplate.queryForList("SELECT friend_id FROM friends WHERE user_id = ?", Long.class, user.getId()))
+//                );
+//            });
 
             return listUser;
 
@@ -49,7 +49,7 @@ public class UserDbStorage implements UserStorage {
     public User findById(Long id) {
         try {
             User user = jdbcTemplate.queryForObject("SELECT id, email, login, name, birthday FROM users  where id = ?", new UserRowMapper(), id);
-            //assert user != null;
+
             user.setIdFriends(
                     new HashSet<>(jdbcTemplate.queryForList("SELECT friend_id FROM friends WHERE user_id = ?", Long.class, user.getId()))
             );
@@ -61,15 +61,6 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User create(User user) {
-
-        if (user.getEmail() == null) {
-            throw new RuntimeException("Имейл должен быть указан");
-        }
-        if (user.getLogin() == null || user.getLogin().isEmpty()) {
-            throw new RuntimeException("Логин должен быть указан");
-        }
-
-        validUser(user);
 
         jdbcTemplate.update(
                 "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)",
@@ -87,15 +78,10 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User update(User newUser) {
-        if (newUser.getId() == null) {
-            throw new RuntimeException("Id должен быть указан");
-        }
 
         User oldUser = findById(newUser.getId());
 
         if (oldUser != null) {
-
-            validUser(newUser);
 
             List<String> emailList = jdbcTemplate.queryForList("select email from users", String.class);
 
@@ -142,22 +128,10 @@ public class UserDbStorage implements UserStorage {
     }
 
     public List<Long> updateFriends(Long idUser, Long idFriend) {
-        boolean friendship = false;
-
-        try {
-            List<Long> idFr = jdbcTemplate.queryForList("SELECT user_id FROM friends WHERE friend_id = ?", Long.class, idUser);
-
-            if (idFr.contains(idFriend)) {
-                friendship = true;
-            }
-        } catch (EmptyResultDataAccessException e) {
-            log.debug("Друзей нет");
-        }
-
 
         jdbcTemplate.update(
-                "INSERT INTO friends (user_id, friend_id, friendship) VALUES (?, ?, ?)",
-                idUser, idFriend, friendship);
+                "INSERT INTO friends (user_id, friend_id) VALUES (?, ?, ?)",
+                idUser, idFriend);
 
         List<Long> idFr2 = new ArrayList<>();
         try {
@@ -173,24 +147,5 @@ public class UserDbStorage implements UserStorage {
         jdbcTemplate.update(
                 "DELETE FROM friends WHERE user_id = ? AND friend_id = ?",
                 idUser, idFriend);
-
-        jdbcTemplate.update(
-                "UPDATE friends SET friendship = ? WHERE friend_id = ? AND user_id = ?",
-                false, idUser, idFriend);
-    }
-
-    private void validUser(User user) {
-        if (user.getEmail() != null && !user.getEmail().contains("@")) {
-            throw new ValidationException("Имейл должен содержать @");
-        }
-        if (user.getLogin() != null && user.getLogin().contains(" ")) {
-            throw new ValidationException("Логин не должен содержать пробелов");
-        }
-        if (user.getName() == null && user.getLogin() != null) {
-            user.setName(user.getLogin());
-        }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Дата рождения не может быть больше текущей");
-        }
     }
 }

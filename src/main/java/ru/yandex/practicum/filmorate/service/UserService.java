@@ -5,9 +5,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,10 +24,25 @@ public class UserService {
     }
 
     public User create(@RequestBody User user) {
+
+        if (user.getEmail() == null) {
+            throw new RuntimeException("Имейл должен быть указан");
+        }
+        if (user.getLogin() == null || user.getLogin().isEmpty()) {
+            throw new RuntimeException("Логин должен быть указан");
+        }
+
+        validUser(user);
+
         return userStorage.create(user);
     }
 
     public User update(@RequestBody User newUser) {
+
+        if (newUser.getId() == null) {
+            throw new RuntimeException("Id должен быть указан");
+        }
+        validUser(newUser);
         return userStorage.update(newUser);
     }
 
@@ -83,5 +100,20 @@ public class UserService {
                 .filter(userStorage.findById(otherId).getIdFriends()::contains)
                 .map(userStorage::findById)
                 .toList();
+    }
+
+    private void validUser(User user) {
+        if (user.getEmail() != null && !user.getEmail().contains("@")) {
+            throw new ValidationException("Имейл должен содержать @");
+        }
+        if (user.getLogin() != null && user.getLogin().contains(" ")) {
+            throw new ValidationException("Логин не должен содержать пробелов");
+        }
+        if (user.getName() == null && user.getLogin() != null) {
+            user.setName(user.getLogin());
+        }
+        if (user.getBirthday().isAfter(LocalDate.now())) {
+            throw new ValidationException("Дата рождения не может быть больше текущей");
+        }
     }
 }

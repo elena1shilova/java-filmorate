@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
+import ru.yandex.practicum.filmorate.mapper.MpaInfoRowMapper;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 
 import java.util.List;
@@ -20,13 +22,13 @@ public class MpaDbStorage implements MpaStorage {
 
     @Override
     public List<Mpa> findAll() {
-        return jdbcTemplate.query("SELECT id, rating, description FROM mpa_info", new MpaInfoRowMapper());
+        return jdbcTemplate.query("SELECT id, rating FROM mpa_info", new MpaInfoRowMapper());
     }
 
     @Override
     public Mpa getFilmMpaById(Long id) {
         try {
-            return jdbcTemplate.queryForObject("SELECT id, rating, description FROM mpa_info WHERE id = ?", new MpaInfoRowMapper(), id);
+            return jdbcTemplate.queryForObject("SELECT id, rating FROM mpa_info WHERE id = ?", new MpaInfoRowMapper(), id);
         } catch (RuntimeException e) {
             throw new ElementNotFoundException("Ошибка поиска по ид " + id);
         }

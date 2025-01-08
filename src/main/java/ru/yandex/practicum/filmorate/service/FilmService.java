@@ -7,11 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -29,10 +31,16 @@ public class FilmService {
     }
 
     public Film create(@Valid @RequestBody Film film) {
+
+        if (film.getName() == null) {
+            throw new RuntimeException("Наименование должно быть указано");
+        }
+        validFilm(film);
         return filmStorage.create(film);
     }
 
     public Film update(@Valid @RequestBody Film newFilm) {
+        validFilm(newFilm);
         return filmStorage.update(newFilm);
     }
 
@@ -80,6 +88,21 @@ public class FilmService {
 
         } catch (RuntimeException e) {
             throw new ElementNotFoundException("Фильм не найден");
+        }
+    }
+
+    private void validFilm(Film film) {
+        if (film.getName() == null) {
+            throw new ValidationException("Наименование должно быть указано");
+        }
+        if (film.getDescription().length() >= 200) {
+            throw new ValidationException("Превышена максимальная длина описания в 200 символов");
+        }
+        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+            throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
+        }
+        if (film.getDuration() < 1) {
+            throw new ValidationException("\"Продолжительность фильма не может быть меньше нуля");
         }
     }
 }
