@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ElementNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -13,8 +15,11 @@ import ru.yandex.practicum.filmorate.mapper.MpaRowMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 @Component("filmDbStorage")
 @Primary
@@ -69,20 +74,40 @@ public class FilmDbStorage implements FilmStorage {
     public Film create(Film film) {
 
         try {
-            jdbcTemplate.update(
-                    "INSERT INTO film (name, description, releaseDate, duration, mpa_id) VALUES (?, ?, ?, ?, ?)",
-                    film.getName(), film.getDescription(),
-                    film.getReleaseDate(),
-                    film.getDuration(), film.getMpa() == null ? null : film.getMpa().getId());
+            /*
+            		String sqlQuery = "insert into FILMS (NAME, DESCRIPTION, RELEASE_DATE, DURATION, RATE, MPA_ID) values (?, ?, ?, ?, ?, ?)";
+
+		KeyHolder keyHolder = new GeneratedKeyHolder();
+		jdbcTemplate.update(connection -> {
+			PreparedStatement stmt = connection.prepareStatement(sqlQuery, new String[]{"FILM_ID"});
+			stmt.setString(1, film.getName());
+			stmt.setString(2, film.getDescription());
+			stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
+			stmt.setLong(4, film.getDuration());
+			stmt.setLong(5, film.getRate());
+			stmt.setLong(6, film.getMpa().getId());
+			return stmt;
+		}, keyHolder);
+		film.setId(keyHolder.getKey().longValue());
+             */
+
+            String sqlQuery = "INSERT INTO film (name, description, releaseDate, duration, mpa_id) VALUES (?, ?, ?, ?, ?)";
+
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+            jdbcTemplate.update(connection -> {
+                PreparedStatement stmt = connection.prepareStatement(sqlQuery, new String[]{"ID"});
+                stmt.setString(1, film.getName());
+                stmt.setString(2, film.getDescription());
+                stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
+                stmt.setLong(4, film.getDuration());
+                stmt.setLong(5, film.getMpa().getId());
+                return stmt;
+            }, keyHolder);
+            film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+
         } catch (RuntimeException e) {
             throw new ValidationException("ошибка сохранения по ид mpa");
         }
-        film.setId(
-                jdbcTemplate.queryForObject(
-                        "SELECT MAX(id) FROM film",
-                        Long.class
-                )
-        );
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
 
