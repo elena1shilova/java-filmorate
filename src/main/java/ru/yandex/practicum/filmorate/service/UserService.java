@@ -84,9 +84,8 @@ public class UserService {
             throw new RuntimeException("Id пользователя/друга должен быть указан");
         }
 
-        User user = userStorage.findById(id);
-        User userFriends = userStorage.findById(otherId);
-        if (user == null || userFriends == null) {
+        User user = userStorage.getFriends(id, otherId);
+        if (user == null) {
             throw new ElementNotFoundException("Id пользователя/друга не найдено");
         }
         userStorage.deleteFriends(id, otherId);

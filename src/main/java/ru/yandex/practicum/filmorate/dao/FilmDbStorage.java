@@ -140,14 +140,11 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Long> addLike(Long idFilm, Long userId) {
 
-        List<Long> idLike = jdbcTemplate.queryForList("SELECT user_id FROM likes WHERE film_id = ?", Long.class, idFilm);
-        if (!idLike.contains(userId)) {
-            jdbcTemplate.update(
-                    "INSERT INTO likes (film_id, user_id) VALUES (?, ?)",
-                    idFilm, userId);
-            idLike.add(userId);
-        }
-        return idLike;
+        jdbcTemplate.update(
+                "merge into LIKES (film_id, user_id) values (?, ?)",
+                idFilm, userId);
+
+        return jdbcTemplate.queryForList("SELECT user_id FROM likes WHERE film_id = ?", Long.class, idFilm);
     }
 
     @Override
