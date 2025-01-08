@@ -52,6 +52,8 @@ public class FilmDbStorage implements FilmStorage {
     public Film findById(Long id) {
         try {
             Film film = jdbcTemplate.queryForObject("SELECT id, name, description, releasedate, duration FROM film where id = ?", new FilmRowMapper(), id);
+
+            film.setGenres(jdbcTemplate.query("SELECT g2.id, g2.genre as name FROM genre g1 JOIN genre_info g2 on g2.id = g1.genre_id WHERE g1.film_id = ?", new GenresRowMapper(), film.getId()));
             try {
                 film.setMpa(jdbcTemplate.queryForObject("SELECT m1.mpa_id id, m2.rating as name FROM film m1 JOIN mpa_info m2 on m2.id = m1.mpa_id WHERE m1.id = ?", new MpaRowMapper(), film.getId()));
             } catch (EmptyResultDataAccessException e) {
