@@ -66,12 +66,15 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
 
-        jdbcTemplate.update(
-                "INSERT INTO film (name, description, releaseDate, duration, mpa_id) VALUES (?, ?, ?, ?, ?)",
-                film.getName(), film.getDescription(),
-                film.getReleaseDate(),
-                film.getDuration(), film.getMpa() == null ? null : film.getMpa().getId());
-
+        try {
+            jdbcTemplate.update(
+                    "INSERT INTO film (name, description, releaseDate, duration, mpa_id) VALUES (?, ?, ?, ?, ?)",
+                    film.getName(), film.getDescription(),
+                    film.getReleaseDate(),
+                    film.getDuration(), film.getMpa() == null ? null : film.getMpa().getId());
+        } catch (RuntimeException e) {
+            throw new ValidationException("ошибка сохранения по ид mpa");
+        }
         film.setId(
                 jdbcTemplate.queryForObject(
                         "SELECT MAX(id) FROM film",
