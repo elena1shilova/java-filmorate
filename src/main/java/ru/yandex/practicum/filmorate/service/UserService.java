@@ -47,6 +47,8 @@ public class UserService {
     }
 
     public void delete(@RequestParam Long id) {
+
+        userStorage.findById(id);
         userStorage.delete(id);
     }
 
@@ -67,10 +69,6 @@ public class UserService {
 
         User user = userStorage.findById(id);
         User userFriends = userStorage.findById(otherId);
-
-        if (user == null || userFriends == null) {
-            throw new ElementNotFoundException("Id пользователя/друга не найдено");
-        }
 
         user.getIdFriends().addAll(userStorage.updateFriends(id, otherId));
         return Arrays.asList(user, userFriends);

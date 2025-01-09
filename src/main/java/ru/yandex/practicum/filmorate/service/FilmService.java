@@ -48,6 +48,7 @@ public class FilmService {
     }
 
     public void delete(@Valid @RequestParam Long id) {
+        filmStorage.findById(id);
         filmStorage.delete(id);
     }
 
@@ -63,11 +64,8 @@ public class FilmService {
         if (id == null || userId == null) {
             throw new RuntimeException("Id фильма/лайка должен быть указан");
         }
-        Film filmDelete = filmStorage.findById(id);
-        User user = userStorage.findById(userId);
-        if (filmDelete == null || user == null) {
-            throw new ElementNotFoundException("Фильм/пользователь не найден");
-        }
+        filmStorage.findById(id);
+        userStorage.findById(userId);
         filmStorage.deleteLike(id, userId);
     }
 
@@ -76,22 +74,15 @@ public class FilmService {
             throw new RuntimeException("Id фильма/лайка должен быть указан");
         }
         Film filmUpdate = filmStorage.findById(id);
-        User user = userStorage.findById(userId);
+        userStorage.findById(userId);
 
-        if (filmUpdate == null || user == null) {
-            throw new ElementNotFoundException("Фильм/пользователь не найден");
-        }
         filmUpdate.getIdLike().addAll(filmStorage.addLike(id, userId));
         return filmUpdate;
     }
 
     public Film getById(Long id) {
-        try {
-            return filmStorage.findById(id);
 
-        } catch (RuntimeException e) {
-            throw new ElementNotFoundException("Фильм не найден");
-        }
+        return filmStorage.findById(id);
     }
 
     private void validFilm(Film film) {

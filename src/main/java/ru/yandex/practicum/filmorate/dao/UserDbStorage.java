@@ -35,7 +35,6 @@ public class UserDbStorage implements UserStorage {
     public List<User> findAll() {
 
         try {
-
             return jdbcTemplate.query("SELECT id, email, login, name, birthday FROM users", new UserRowMapper());
 
         } catch (EmptyResultDataAccessException e) {
@@ -81,35 +80,31 @@ public class UserDbStorage implements UserStorage {
 
         User oldUser = findById(newUser.getId());
 
-        if (oldUser != null) {
+        List<String> emailList = jdbcTemplate.queryForList("select email from users", String.class);
 
-            List<String> emailList = jdbcTemplate.queryForList("select email from users", String.class);
-
-            if (!oldUser.getEmail().equals(newUser.getEmail()) && emailList.contains(newUser.getEmail())) {
-                throw new ValidationException("Этот имейл уже используется");
-            }
-            if (newUser.getEmail() != null) {
-                oldUser.setEmail(newUser.getEmail());
-            }
-            if (newUser.getLogin() != null) {
-                oldUser.setLogin(newUser.getLogin());
-            }
-            if (newUser.getName() != null) {
-                oldUser.setName(newUser.getName());
-            }
-            if (newUser.getBirthday() != null) {
-                oldUser.setBirthday(newUser.getBirthday());
-            }
-
-            jdbcTemplate.update(
-                    "UPDATE users SET email = ?, login = ?, name = ?, birthday = ?",
-                    oldUser.getEmail(), oldUser.getLogin(),
-                    oldUser.getName(), oldUser.getBirthday());
-
-            log.debug("Пользователь успешно обновлен");
-            return oldUser;
+        if (!oldUser.getEmail().equals(newUser.getEmail()) && emailList.contains(newUser.getEmail())) {
+            throw new ValidationException("Этот имейл уже используется");
         }
-        throw new ElementNotFoundException("id = " + newUser.getId() + " не найден");
+        if (newUser.getEmail() != null) {
+            oldUser.setEmail(newUser.getEmail());
+        }
+        if (newUser.getLogin() != null) {
+            oldUser.setLogin(newUser.getLogin());
+        }
+        if (newUser.getName() != null) {
+            oldUser.setName(newUser.getName());
+        }
+        if (newUser.getBirthday() != null) {
+            oldUser.setBirthday(newUser.getBirthday());
+        }
+
+        jdbcTemplate.update(
+                "UPDATE users SET email = ?, login = ?, name = ?, birthday = ?",
+                oldUser.getEmail(), oldUser.getLogin(),
+                oldUser.getName(), oldUser.getBirthday());
+
+        log.debug("Пользователь успешно обновлен");
+        return oldUser;
     }
 
     @Override
@@ -118,10 +113,6 @@ public class UserDbStorage implements UserStorage {
             throw new RuntimeException("Id должен быть указан");
         }
 
-        User user = findById(id);
-        if (user != null) {
-            throw new ElementNotFoundException("id = " + id + " не найден");
-        }
         jdbcTemplate.update(
                 "DELETE FROM users WHERE ID = ?",
                 id);

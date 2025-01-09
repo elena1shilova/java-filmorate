@@ -93,9 +93,6 @@ public class FilmDbStorage implements FilmStorage {
     public Film update(Film newFilm) {
 
         Film film = findById(newFilm.getId());
-        if (film == null) {
-            throw new ElementNotFoundException("id = " + newFilm.getId() + " не найден");
-        }
 
         jdbcTemplate.update(
                 "UPDATE film SET name = ?, description = ?, releaseDate = ?, duration = ?",
@@ -113,10 +110,7 @@ public class FilmDbStorage implements FilmStorage {
         if (id == null) {
             throw new RuntimeException("Id должен быть указан");
         }
-        Film film = findById(id);
-        if (film == null) {
-            throw new ElementNotFoundException("id = " + id + " не найден");
-        }
+
         jdbcTemplate.update(
                 "DELETE FROM film WHERE ID = ?",
                 id);
