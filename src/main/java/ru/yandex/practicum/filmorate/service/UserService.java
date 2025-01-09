@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,14 +23,45 @@ public class UserService {
     }
 
     public User create(@RequestBody User user) {
+
+        if (user.getEmail() == null) {
+            throw new RuntimeException("Имейл должен быть указан");
+        }
+        if (user.getLogin() == null || user.getLogin().isEmpty()) {
+            throw new RuntimeException("Логин должен быть указан");
+        }
+
+        validUser(user);
+
         return userStorage.create(user);
     }
 
     public User update(@RequestBody User newUser) {
-        return userStorage.update(newUser);
+
+        if (newUser.getId() == null) {
+            throw new RuntimeException("Id должен быть указан");
+        }
+        validUser(newUser);
+        User oldUser = userStorage.findById(newUser.getId());
+
+        if (newUser.getEmail() != null) {
+            oldUser.setEmail(newUser.getEmail());
+        }
+        if (newUser.getLogin() != null) {
+            oldUser.setLogin(newUser.getLogin());
+        }
+        if (newUser.getName() != null) {
+            oldUser.setName(newUser.getName());
+        }
+        if (newUser.getBirthday() != null) {
+            oldUser.setBirthday(newUser.getBirthday());
+        }
+        return userStorage.update(oldUser);
     }
 
     public void delete(@RequestParam Long id) {
+
+        userStorage.findById(id);
         userStorage.delete(id);
     }
 
@@ -37,10 +70,8 @@ public class UserService {
         if (id == null) {
             throw new RuntimeException("Id пользователя должен быть указан");
         }
-
-        return userStorage.findById(id).getIdFriends().stream()
-                .map(userStorage::findById)
-                .toList();
+        userStorage.findById(id);
+        return userStorage.getUserFriends(id);
     }
 
     public List<User> updateFriends(Long id, Long otherId) {
@@ -51,8 +82,8 @@ public class UserService {
 
         User user = userStorage.findById(id);
         User userFriends = userStorage.findById(otherId);
-        user.getIdFriends().add(userFriends.getId());
-        userFriends.getIdFriends().add(user.getId());
+
+        user.getIdFriends().addAll(userStorage.updateFriends(id, otherId));
         return Arrays.asList(user, userFriends);
     }
 
@@ -62,19 +93,33 @@ public class UserService {
             throw new RuntimeException("Id пользователя/друга должен быть указан");
         }
 
-        User user = userStorage.findById(id);
-        User userFriends = userStorage.findById(otherId);
-        user.getIdFriends().remove(userFriends.getId());
-        userFriends.getIdFriends().remove(user.getId());
+        userStorage.findById(id);
+        userStorage.findById(otherId);
+        User user = userStorage.getFriends(id, otherId);
+        if (user != null) {
+            userStorage.deleteFriends(id, otherId);
+        }
     }
 
     public List<User> getUserFriendsCommon(Long id, Long otherId) {
         if (id == null || otherId == null) {
             throw new RuntimeException("Id пользователя/другого пользователя должен быть указан");
         }
-        return userStorage.findById(id).getIdFriends().stream()
-                .filter(userStorage.findById(otherId).getIdFriends()::contains)
-                .map(userStorage::findById)
-                .toList();
+        return userStorage.getUserFriendsCommon(id, otherId);
+    }
+
+    private void validUser(User user) {
+        if (user.getEmail() != null && !user.getEmail().contains("@")) {
+            throw new ValidationException("Имейл должен содержать @");
+        }
+        if (user.getLogin() != null && user.getLogin().contains(" ")) {
+            throw new ValidationException("Логин не должен содержать пробелов");
+        }
+        if (user.getName() == null && user.getLogin() != null) {
+            user.setName(user.getLogin());
+        }
+        if (user.getBirthday().isAfter(LocalDate.now())) {
+            throw new ValidationException("Дата рождения не может быть больше текущей");
+        }
     }
 }

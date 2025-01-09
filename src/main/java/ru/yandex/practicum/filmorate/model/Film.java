@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Setter
@@ -21,6 +23,8 @@ public class Film {
     private String name;
     private String description;
     private LocalDate releaseDate;
-    private Long duration;
+    private Integer duration;
     private Set<Long> idLike = new HashSet<>();
+    private List<Genres> genres = new ArrayList<>();
+    private Mpa mpa;
 }
