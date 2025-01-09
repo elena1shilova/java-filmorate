@@ -76,26 +76,12 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public User update(User newUser) {
+    public User update(User oldUser) {
 
-        User oldUser = findById(newUser.getId());
+        List<String> emailList = jdbcTemplate.queryForList("select email from users where id <> ?", String.class, oldUser.getId());
 
-        List<String> emailList = jdbcTemplate.queryForList("select email from users", String.class);
-
-        if (!oldUser.getEmail().equals(newUser.getEmail()) && emailList.contains(newUser.getEmail())) {
+        if (emailList.contains(oldUser.getEmail())) {
             throw new ValidationException("Этот имейл уже используется");
-        }
-        if (newUser.getEmail() != null) {
-            oldUser.setEmail(newUser.getEmail());
-        }
-        if (newUser.getLogin() != null) {
-            oldUser.setLogin(newUser.getLogin());
-        }
-        if (newUser.getName() != null) {
-            oldUser.setName(newUser.getName());
-        }
-        if (newUser.getBirthday() != null) {
-            oldUser.setBirthday(newUser.getBirthday());
         }
 
         jdbcTemplate.update(
